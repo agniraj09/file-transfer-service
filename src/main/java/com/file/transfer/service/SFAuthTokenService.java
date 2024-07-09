@@ -1,5 +1,6 @@
 package com.file.transfer.service;
 
+import com.file.transfer.constants.AppConstants;
 import com.file.transfer.domain.AuthTokenResponse;
 import com.file.transfer.domain.SFProperties;
 import java.time.Instant;
@@ -16,7 +17,6 @@ public class SFAuthTokenService {
 
     private static LocalDateTime expiry_time = LocalDateTime.now();
     private static String bearerToken;
-    private static final int VALIDITY = 3000000;
 
     private final SFProperties sfProperties;
 
@@ -48,7 +48,7 @@ public class SFAuthTokenService {
                 .getBody();
 
         // Token is valid for 60 minutes. To be on safer side, adding 50 minutes validity.
-        var expiry = response.issuedAt() + VALIDITY;
+        var expiry = response.issuedAt() + AppConstants.VALIDITY;
 
         expiry_time = LocalDateTime.ofInstant(Instant.ofEpochMilli(expiry), ZoneId.systemDefault());
         bearerToken = response.accessToken();

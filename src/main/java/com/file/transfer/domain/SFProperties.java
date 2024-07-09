@@ -19,6 +19,9 @@ public class SFProperties {
     @NotBlank(message = "file download URL is missing")
     private String downloadURL;
 
+    @NotBlank(message = "file upload URL is missing")
+    private String uploadURL;
+
     // Auth Token Properties
     @NotBlank(message = "username is missing")
     private String username;

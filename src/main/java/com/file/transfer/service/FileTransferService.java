@@ -3,6 +3,7 @@ package com.file.transfer.service;
 import com.file.transfer.domain.FileMetadata;
 import com.file.transfer.domain.FileUploadRequest;
 import com.file.transfer.domain.FileUploadResponse;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +23,6 @@ public class FileTransferService {
     }
 
     public List<FileUploadResponse> uploadFiles(FileUploadRequest request) {
-
         List<FileUploadResponse> responseList = new ArrayList<>();
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
@@ -47,13 +47,25 @@ public class FileTransferService {
             if (null != file) {
                 var awsResponse = awsService.uploadFile(metadata.fileName(), folderName, file);
 
-                response = new FileUploadResponse(
-                        metadata.sfFileId(), UUID.randomUUID().toString());
+                // TODO Insert metadata to Postgres
+
+                response = new FileUploadResponse(metadata.sfFileId(), UUID.randomUUID().toString());
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         return response;
+    }
+
+    public String downloadFile(String fileId) throws IOException {
+        // TODO Fetch folder name & file name using fileId
+        String folderName = "sample", fileName = "sample.txt", contentType = "text/plain";
+
+        String objectKey = folderName + "/" + fileName;
+        // Download file from S3
+        var resource = awsService.downloadFile(objectKey);
+        // Upload to SF
+        return sfFileService.uploadFileToSF(fileName, resource, contentType);
     }
 }

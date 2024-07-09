@@ -1,16 +1,17 @@
 package com.file.transfer.service;
 
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.util.IOUtils;
+import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.file.transfer.domain.AWSS3Config;
+import com.file.transfer.domain.CustomResource;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,20 +55,17 @@ public class AWSFileService {
         return new PutObjectRequest(awsS3Config.getBucketName(), fileName, file.getInputStream(), metadata);
     }
 
-    public Resource downloadFile(String partnerName, String fileName) {
-
-        String objectKey = partnerName + "/" + fileName;
-
+    public Resource downloadFile(String objectKey) {
         try {
             if (s3client.doesObjectExist(awsS3Config.getBucketName(), objectKey)) {
                 GetObjectRequest getObjectRequest = new GetObjectRequest(awsS3Config.getBucketName(), objectKey);
-                var s3Object = s3client.getObject(getObjectRequest);
-                return new ByteArrayResource(IOUtils.toByteArray(s3Object.getObjectContent()));
+                S3Object s3Object = s3client.getObject(getObjectRequest);
+                return new CustomResource(s3Object, objectKey);
             } else {
                 throw new FileNotFoundException("File not available in S3");
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (AmazonServiceException | IOException e) {
+            throw new RuntimeException("Failed to download file from S3", e);
         }
     }
 }
