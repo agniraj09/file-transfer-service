@@ -1,15 +1,15 @@
 package com.file.transfer.service;
 
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.file.transfer.constants.AppConstants;
 import com.file.transfer.domain.AWSS3Config;
 import com.file.transfer.domain.CustomResource;
-import java.io.FileNotFoundException;
+import com.file.transfer.exception.FileNotFoundException;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -30,16 +30,10 @@ public class AWSFileService {
         this.awsS3Config = awsS3Config;
     }
 
-    public String uploadFile(String fileName, String folderName, MultipartFile file) {
-        try {
-            var putObjectRequest = buildPutObjectRequest(fileName, folderName, file);
-            var putObjectResult = s3client.putObject(putObjectRequest);
-            var response = mapper.writeValueAsString(putObjectResult);
-            log.info("File upload response -> {}", response);
-            return awsS3Config.getEndpointUrl() + "/" + awsS3Config.getBucketName() + "/" + fileName;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void uploadFile(String fileName, String folderName, MultipartFile file) throws IOException {
+        var putObjectRequest = buildPutObjectRequest(fileName, folderName, file);
+        var putObjectResult = s3client.putObject(putObjectRequest);
+        log.info("File upload successful. VersionID -> {}", putObjectResult.getVersionId());
     }
 
     private PutObjectRequest buildPutObjectRequest(String fileName, String folderName, MultipartFile file)
@@ -56,16 +50,12 @@ public class AWSFileService {
     }
 
     public Resource downloadFile(String objectKey) {
-        try {
-            if (s3client.doesObjectExist(awsS3Config.getBucketName(), objectKey)) {
-                GetObjectRequest getObjectRequest = new GetObjectRequest(awsS3Config.getBucketName(), objectKey);
-                S3Object s3Object = s3client.getObject(getObjectRequest);
-                return new CustomResource(s3Object, objectKey);
-            } else {
-                throw new FileNotFoundException("File not available in S3");
-            }
-        } catch (AmazonServiceException | IOException e) {
-            throw new RuntimeException("Failed to download file from S3", e);
+        if (s3client.doesObjectExist(awsS3Config.getBucketName(), objectKey)) {
+            GetObjectRequest getObjectRequest = new GetObjectRequest(awsS3Config.getBucketName(), objectKey);
+            S3Object s3Object = s3client.getObject(getObjectRequest);
+            return new CustomResource(s3Object, objectKey);
+        } else {
+            throw new FileNotFoundException(AppConstants.FILE_NOT_FOUND);
         }
     }
 }

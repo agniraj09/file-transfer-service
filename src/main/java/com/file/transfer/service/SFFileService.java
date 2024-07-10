@@ -1,12 +1,16 @@
 package com.file.transfer.service;
 
+import com.file.transfer.constants.AppConstants;
 import com.file.transfer.domain.CustomMultipartFile;
 import com.file.transfer.domain.FileInfo;
 import com.file.transfer.domain.SFProperties;
+import com.file.transfer.exception.FileNotFoundException;
+import com.file.transfer.utility.StringUtility;
 import java.io.IOException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -36,7 +40,14 @@ public class SFFileService {
                 .uri(downloadURL)
                 .header("Authorization", authTokenService.getBearerTokenWithBearerAppended())
                 .retrieve()
-                .body(Resource.class);
+                .onStatus(status -> HttpStatus.NOT_FOUND == status, (req, res) -> {
+                    throw new FileNotFoundException(AppConstants.FILE_NOT_FOUND);
+                })
+                .onStatus(status -> HttpStatus.INTERNAL_SERVER_ERROR == status, (req, res) -> {
+                    throw new RuntimeException(StringUtility.streamToString(res.getBody()));
+                })
+                .toEntity(Resource.class)
+                .getBody();
 
         return new CustomMultipartFile(resource.getContentAsByteArray(), metadata.fileName(), metadata.contentType());
     }
@@ -52,6 +63,12 @@ public class SFFileService {
                 .accept(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
+                .onStatus(status -> HttpStatus.NOT_FOUND == status, (req, res) -> {
+                    throw new FileNotFoundException(AppConstants.FILE_NOT_FOUND);
+                })
+                .onStatus(status -> HttpStatus.INTERNAL_SERVER_ERROR == status, (req, res) -> {
+                    throw new RuntimeException(StringUtility.streamToString(res.getBody()));
+                })
                 .toEntity(String.class)
                 .getBody();
     }

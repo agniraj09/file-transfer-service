@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
 public interface FileTransferApi {
@@ -37,5 +38,5 @@ public interface FileTransferApi {
             responses = {@ApiResponse(responseCode = "200", description = "Fetches file file from storage system")})
     ResponseEntity<String> downloadFile(
             @Parameter(description = "Unique File ID(UUID)", example = "6c2c6280-bfd7-4b9a-a91e-383acff2f1fe")
-                    String fileId);
+                    UUID fileId);
 }

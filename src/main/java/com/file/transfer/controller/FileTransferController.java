@@ -5,6 +5,7 @@ import com.file.transfer.domain.FileUploadResponse;
 import com.file.transfer.service.FileTransferService;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -27,7 +28,7 @@ public class FileTransferController implements FileTransferApi {
 
     @Override
     @GetMapping(value = "/download", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> downloadFile(@RequestParam("fileId") String fileId) {
+    public ResponseEntity<String> downloadFile(@RequestParam("fileId") UUID fileId) {
         return ResponseEntity.ok(fileTransferService.downloadFile(fileId));
     }
 }
