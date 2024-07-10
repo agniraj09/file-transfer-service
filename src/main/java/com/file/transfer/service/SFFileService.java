@@ -1,7 +1,7 @@
 package com.file.transfer.service;
 
 import com.file.transfer.domain.CustomMultipartFile;
-import com.file.transfer.domain.FileMetadata;
+import com.file.transfer.domain.FileInfo;
 import com.file.transfer.domain.SFProperties;
 import java.io.IOException;
 import org.springframework.core.io.Resource;
@@ -28,7 +28,7 @@ public class SFFileService {
         this.authTokenService = authTokenService;
     }
 
-    public MultipartFile downloadFileFromSF(FileMetadata metadata) throws IOException {
+    public MultipartFile downloadFileFromSF(FileInfo metadata) throws IOException {
         String downloadURL = sfProperties.getDownloadURL() + metadata.sfFileId() + "/VersionData";
 
         var resource = restClient
@@ -41,10 +41,10 @@ public class SFFileService {
         return new CustomMultipartFile(resource.getContentAsByteArray(), metadata.fileName(), metadata.contentType());
     }
 
-    public String uploadFileToSF(String fileName, Resource resource, String contentType) throws IOException {
+    public String uploadFileToSF(String fileName, Resource resource) {
         var request = buildFileUploadToSFRequest(fileName, resource);
 
-        var response = restClient
+        return restClient
                 .post()
                 .uri(sfProperties.getUploadURL())
                 .header("Authorization", authTokenService.getBearerTokenWithBearerAppended())
@@ -54,27 +54,22 @@ public class SFFileService {
                 .retrieve()
                 .toEntity(String.class)
                 .getBody();
-        return response;
     }
 
     private MultiValueMap<String, Object> buildFileUploadToSFRequest(String fileName, Resource file) {
         MultiValueMap<String, Object> request = new LinkedMultiValueMap<>();
 
-        HttpHeaders fileHeaders = new HttpHeaders();
-        fileHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        request.add("VersionData", new HttpEntity<>(file, fileHeaders));
+        request.add("VersionData", new HttpEntity<>(file, multipartHeader()));
 
         String json = "{\"PathOnClient\" : \"" + fileName + "\"}";
-        HttpHeaders jsonHeaders = new HttpHeaders();
-        jsonHeaders.setContentType(MediaType.APPLICATION_JSON);
-        request.add("entity_content", new HttpEntity<>(json, jsonHeaders));
+        request.add("entity_content", new HttpEntity<>(json, jsonHeader()));
 
         return request;
     }
 
     private MultiValueMap<String, String> multipartHeader() {
         HttpHeaders jsonHeaders = new HttpHeaders();
-        jsonHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+        jsonHeaders.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         return jsonHeaders;
     }
 

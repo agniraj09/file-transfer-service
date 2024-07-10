@@ -6,5 +6,5 @@ import java.util.List;
 
 public record FileUploadRequest(
         @NotBlank(message = "folderName cannot be blank") String folderName,
-        @NotEmpty(message = "fileMetadata cannot be empty") List<FileMetadata> fileMetadata,
+        @NotEmpty(message = "fileMetadata cannot be empty") List<FileInfo> fileInfo,
         @NotBlank(message = "uploadedByUserID cannot be blank") String uploadedByUserID) {}

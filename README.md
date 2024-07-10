@@ -11,7 +11,7 @@ File Upload Request
 ```
 {
     "folderName": "sample",
-    "fileMetadata": [
+    "fileInfo": [
         {
             "fileName": "sample.txt",
             "sfFileId": "068dL000002gfLlQAI",
